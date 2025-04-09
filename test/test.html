@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>パスキーテスト</title>
+</head>
+<body>
+  <h1>パスキーテスト</h1>
+  <input type="text" id="username" placeholder="ユーザー名を入力" />
+  <button id="registerBtn">テスト</button>
+
+  <script>
+    const registerBtn = document.getElementById('registerBtn');
+
+    registerBtn.addEventListener('click', async () => {
+      if (!window.PublicKeyCredential) {
+        console.log("このブラウザでは WebAuthn がサポートされていません。");
+        return;
+      }
+      const cap = await PublicKeyCredential.getClientCapabilities()
+      console.log(cap)
+
+      try {
+        // プラットフォーム認証器が使えるか
+        const isUVPAA = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        console.log("isUVPAA:", isUVPAA);
+
+        // 条件付きUIが使えるか
+        const isCMA = await PublicKeyCredential.isConditionalMediationAvailable();
+        console.log("isCMA:", isCMA);
+
+      } catch (e) {
+        console.error("チェック中にエラーが発生しました:", e);
+      }
+
+      console.log("PublicKeyCredential:", window.PublicKeyCredential);
+    });
+  </script>
+</body>
+</html>
