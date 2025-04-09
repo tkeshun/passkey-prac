@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>パスキー登録</title>
+</head>
+<body>
+  <h1>パスキー登録</h1>
+  <input type="text" id="username" placeholder="ユーザー名を入力" />
+  <button id="registerBtn">登録</button>
+
+  <script>
+    const registerBtn = document.getElementById('registerBtn');
+
+    registerBtn.addEventListener('click', async () => {
+      const username = document.getElementById('username').value;
+      if (!username) {
+        alert('ユーザー名を入力してください');
+        return;
+      }
+
+      try {
+        // ステップ1: サーバーから登録チャレンジを取得
+        const rawOptions = await fetch('/webauthn/register/begin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        }).then(r => r.json());
+        console.log(rawOptions); 
+        const publicKey = PublicKeyCredential.parseCreationOptionsFromJSON(rawOptions.publicKey);
+        const credential = await navigator.credentials.create({ publicKey });
+
+        console.log(credential.toJSON())
+        const credJSON = credential.toJSON()
+        
+        // ステップ3: 認証情報をサーバーに送信して登録完了
+        const result = await fetch('/webauthn/register/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credJSON),
+          // body: JSON.stringify({
+          //   credential: credJSON, // 👈 ラップする
+          // }),
+          // body: JSON.stringify({
+          //   username: username,
+          //   id: credential.id,
+          //   rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+          //   type: credential.type,
+          //   response: {
+          //     attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
+          //     clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+          //   }
+          // })
+        });
+
+        if (result.ok) {
+          alert('パスキー登録成功！');
+        } else {
+          alert('登録失敗');
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert('エラーが発生しました');
+      }
+    });
+  </script>
+</body>
+</html>
